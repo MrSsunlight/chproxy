@@ -1,0 +1,27 @@
+# 测试配置
+# 日志级别
+log_debug: true
+
+server:
+  http:
+    listen_addr: ":9090"
+    allowed_networks: ["127.0.0.0/24"]
+
+users:
+  - name: "chproxy"
+    # 访问哪个集群
+    to_cluster: "default"
+    # 以哪个用户账号访问
+    to_user: "admin"
+
+clusters:
+  # 集群名
+  - name: "default"
+    # 集群列表
+    nodes: ["10.202.254.234:8123"]
+    # 访问ch 账号密码
+    users:
+      - name: "admin"
+        password: "59stbhUe"
+      - name: "ch"
+        password: "XReCeWXz"

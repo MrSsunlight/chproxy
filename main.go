@@ -20,10 +20,12 @@ import (
 	"golang.org/x/crypto/acme/autocert"
 )
 
-var (
+// go 执行顺序： 导入包 const -> var -> init() -> main包 const -> var -> init() -> main()
+// 尽量避免使用全局变量加载参数，推荐在init() 中进行
+/*var (
 	configFile = flag.String("config", "", "Proxy configuration filename")
 	version    = flag.Bool("version", false, "Prints current version and exits")
-)
+)*/
 
 var (
 	proxy = newReverseProxy()
@@ -32,17 +34,26 @@ var (
 	allowedNetworksHTTP    atomic.Value
 	allowedNetworksHTTPS   atomic.Value
 	allowedNetworksMetrics atomic.Value
+
+	configFile string
+	version bool
 )
+
+func init()  {
+	flag.StringVar(&configFile, "config","", "Proxy configuration filename")
+	flag.BoolVar(&version, "version",false, "Prints current version and exits")
+}
+
 
 func main() {
 	flag.Parse()
-	if *version {
+	if version {
 		fmt.Printf("%s\n", versionString())
 		os.Exit(0)
 	}
 
-	log.Infof("%s", versionString())
-	log.Infof("Loading config: %s", *configFile)
+	//log.Infof("%s", versionString())
+	log.Infof("Loading config: %s", configFile)
 	cfg, err := loadConfig()
 	if err != nil {
 		log.Fatalf("error while loading config: %s", err)
@@ -50,20 +61,21 @@ func main() {
 	if err = applyConfig(cfg); err != nil {
 		log.Fatalf("error while applying config: %s", err)
 	}
-	log.Infof("Loading config %q: successful", *configFile)
+	log.Infof("Loading config %q: successful", configFile)
 
+	// 手动触发配置从加载
 	c := make(chan os.Signal)
 	signal.Notify(c, syscall.SIGHUP)
 	go func() {
 		for {
 			switch <-c {
 			case syscall.SIGHUP:
-				log.Infof("SIGHUP received. Going to reload config %s ...", *configFile)
+				log.Infof("SIGHUP received. Going to reload config %s ...", configFile)
 				if err := reloadConfig(); err != nil {
 					log.Errorf("error while reloading config: %s", err)
 					continue
 				}
-				log.Infof("Reloading config %s: successful", *configFile)
+				log.Infof("Reloading config %s: successful", configFile)
 			}
 		}
 	}()
@@ -248,13 +260,13 @@ func serveHTTP(rw http.ResponseWriter, r *http.Request) {
 }
 
 func loadConfig() (*config.Config, error) {
-	if *configFile == "" {
+	if configFile == "" {
 		log.Fatalf("Missing -config flag")
 	}
-	cfg, err := config.LoadFile(*configFile)
+	cfg, err := config.LoadFile(configFile)
 	if err != nil {
 		configSuccess.Set(0)
-		return nil, fmt.Errorf("can't load config %q: %s", *configFile, err)
+		return nil, fmt.Errorf("can't load config %q: %s", configFile, err)
 	}
 	configSuccess.Set(1)
 	configSuccessTime.Set(float64(time.Now().Unix()))
