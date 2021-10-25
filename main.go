@@ -46,18 +46,21 @@ func init()  {
 
 
 func main() {
+	// 加载参数 config、version
 	flag.Parse()
 	if version {
 		fmt.Printf("%s\n", versionString())
 		os.Exit(0)
 	}
 
+	// 加载配置
 	//log.Infof("%s", versionString())
 	log.Infof("Loading config: %s", configFile)
 	cfg, err := loadConfig()
 	if err != nil {
 		log.Fatalf("error while loading config: %s", err)
 	}
+	//
 	if err = applyConfig(cfg); err != nil {
 		log.Fatalf("error while applying config: %s", err)
 	}
@@ -95,6 +98,7 @@ func main() {
 		go serve(server.HTTP)
 	}
 
+	// 阻塞进程 不退出
 	select {}
 }
 
@@ -259,20 +263,28 @@ func serveHTTP(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// 加载yml配置文件
 func loadConfig() (*config.Config, error) {
+	// 未传参直接结束
 	if configFile == "" {
 		log.Fatalf("Missing -config flag")
 	}
+	// 加载配置文件
 	cfg, err := config.LoadFile(configFile)
 	if err != nil {
 		configSuccess.Set(0)
 		return nil, fmt.Errorf("can't load config %q: %s", configFile, err)
 	}
+	// Prometheus 监控指标计数
 	configSuccess.Set(1)
 	configSuccessTime.Set(float64(time.Now().Unix()))
 	return cfg, nil
 }
 
+/*
+	将配置应用与proxy
+	初始化网络、日志级别、集群以及集群访问
+*/
 func applyConfig(cfg *config.Config) error {
 	if err := proxy.applyConfig(cfg); err != nil {
 		return err

@@ -18,6 +18,7 @@ var (
 	fatalLogger = log.New(os.Stderr, "FATAL: ", stdLogFlags)
 
 	// NilLogger suppresses all the log messages.
+	// 屏蔽所有日志消息
 	NilLogger = log.New(ioutil.Discard, "", stdLogFlags)
 )
 
