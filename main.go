@@ -36,26 +36,26 @@ var (
 	allowedNetworksMetrics atomic.Value
 
 	configFile string
-	version bool
+	version    bool
 )
 
-func init()  {
-	flag.StringVar(&configFile, "config","", "Proxy configuration filename")
-	flag.BoolVar(&version, "version",false, "Prints current version and exits")
+func init() {
+	flag.StringVar(&configFile, "config", "", "Proxy configuration filename")
+	flag.BoolVar(&version, "version", false, "Prints current version and exits")
 }
-
 
 func main() {
 	// 加载参数 config、version
 	flag.Parse()
 	if version {
-		fmt.Printf("%s\n", versionString())
+		fmt.Printf("version: %s\n", versionString())
 		os.Exit(0)
 	}
 
 	// 加载配置
 	//log.Infof("%s", versionString())
 	log.Infof("Loading config: %s", configFile)
+	// 没有传配置文件  直接退出（log.Fatalf）
 	cfg, err := loadConfig()
 	if err != nil {
 		log.Fatalf("error while loading config: %s", err)
@@ -83,6 +83,7 @@ func main() {
 		}
 	}()
 
+	// ch 服务器地址
 	server := cfg.Server
 	if len(server.HTTP.ListenAddr) == 0 && len(server.HTTPS.ListenAddr) == 0 {
 		panic("BUG: broken config validation - `listen_addr` is not configured")
@@ -213,6 +214,7 @@ func listenAndServe(ln net.Listener, h http.Handler, cfg config.TimeoutCfg) erro
 var promHandler = promhttp.Handler()
 
 func serveHTTP(rw http.ResponseWriter, r *http.Request) {
+	log.Debugf("request method: %s", r.Method)
 	switch r.Method {
 	case http.MethodGet, http.MethodPost:
 		// Only GET and POST methods are supported.
@@ -226,6 +228,8 @@ func serveHTTP(rw http.ResponseWriter, r *http.Request) {
 		respondWith(rw, err, http.StatusMethodNotAllowed)
 		return
 	}
+
+	log.Debugf("request URL path: %s", r.URL.Path)
 
 	switch r.URL.Path {
 	case "/favicon.ico":

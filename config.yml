@@ -4,11 +4,13 @@ log_debug: true
 
 server:
   http:
-    listen_addr: ":9090"
-    allowed_networks: ["127.0.0.0/24"]
+    # echo 'select * from system.clusters' | curl 'http://192.168.124.3:9090/?user=chproxy&password=123456' --data-binary @-
+    listen_addr: "192.168.124.3:9090"
+    allowed_networks: ["127.0.0.0/24", "192.168.124.0/24"]
 
 users:
   - name: "chproxy"
+    password: "123456"
     # 访问哪个集群
     to_cluster: "default"
     # 以哪个用户账号访问
@@ -18,10 +20,8 @@ clusters:
   # 集群名
   - name: "default"
     # 集群列表
-    nodes: ["10.202.254.234:8123"]
+    nodes: ["192.168.180.128:8123"]
     # 访问ch 账号密码
     users:
       - name: "admin"
-        password: "59stbhUe"
-      - name: "ch"
-        password: "XReCeWXz"
+        password: "chadmin"
