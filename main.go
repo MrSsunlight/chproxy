@@ -230,6 +230,10 @@ func serveHTTP(rw http.ResponseWriter, r *http.Request) {
 			an = allowedNetworksHTTPS.Load().(*config.Networks)
 			err = fmt.Errorf("https connections are not allowed from %s", r.RemoteAddr)
 		} else {
+			log.Debugf("aaaa: %v", allowedNetworksHTTP)
+			log.Debugf("bbb: %v", allowedNetworksHTTP.Load())
+			log.Debugf("ccc: %v", allowedNetworksHTTP.Load().(*config.Networks))
+
 			an = allowedNetworksHTTP.Load().(*config.Networks)
 			err = fmt.Errorf("http connections are not allowed from %s", r.RemoteAddr)
 		}
@@ -269,7 +273,7 @@ func applyConfig(cfg *config.Config) error {
 	allowedNetworksHTTPS.Store(&cfg.Server.HTTPS.AllowedNetworks)
 	allowedNetworksMetrics.Store(&cfg.Server.Metrics.AllowedNetworks)
 	log.SetDebug(cfg.LogDebug)
-	log.Infof("Loaded config:\n%s", cfg)
+	//log.Infof("Loaded config:\n%s", cfg)
 
 	return nil
 }

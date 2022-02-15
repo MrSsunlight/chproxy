@@ -1,0 +1,53 @@
+# echo "select count(1) as pv from dnsmon.cdns_log;" | curl -u admin: --data-binary @- 192.168.101.132:9090
+
+log_debug: true
+
+server:
+  http:
+    listen_addr: ":9090"
+    allowed_networks: ["1.2.3.4/24"]
+
+users:
+  - name: "admin"
+    #    password: "admin"
+    to_cluster: "cluster_1st"
+    to_user: "admin"
+    max_queue_size: 40
+    max_queue_time: 25s
+    allow_cors: true
+  - name: "default"
+    to_cluster: "cluster_1st"
+    to_user: "de"
+    max_queue_size: 10
+    max_queue_time: 50s
+  - name: "readOnly"
+    to_cluster: "cluster_1st"
+    to_user: "ch"
+    allow_cors: true
+
+
+
+# by default each cluster has `default` user which can be overridden by section `users`
+clusters:
+  - name: "cluster_1st"
+    nodes: [
+        "10.202.254.234:8123",
+    ]
+
+    heartbeat:
+      interval: 10m
+      timeout: 10s
+      request: "/?query=SELECT%201%2B1"
+      response: "2\n"
+
+    kill_query_user:
+      name: "admin"
+      password: "59stbhUe"
+
+    users:
+      - name: "admin"
+        password: "59stbhUe"
+      - name: "de"
+        password: "12rB7WD4"
+      - name: "ch"
+        password: "XReCeWXz"
