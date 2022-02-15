@@ -322,9 +322,7 @@ func (rp *reverseProxy) serveFromCache(s *scope, srw *statResponseWriter, req *h
 }
 
 // applyConfig applies the given cfg to reverseProxy.
-//
-// New config is applied only if non-nil error returned.
-// Otherwise old config version is kept.
+// 返回为 nil 的时候重新加载配置
 func (rp *reverseProxy) applyConfig(cfg *config.Config) error {
 	// configLock protects from concurrent calls to applyConfig
 	// by serializing such calls.

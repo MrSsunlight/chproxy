@@ -19,7 +19,7 @@
 * 所有的限制都可以对每个输入用户、每个集群用户进行设置。
 * 支持自动延迟请求，直到满足对用户的限制条件。
 * 支持配置每个用户的[响应缓存](#caching)。
-* 响应缓存具有内建保护功能，可以防止 [惊群效应（thundering herd）](https://en.wikipedia.org/wiki/Cache_stampede)，即 dogpile 效应。
+* 响应缓存具有内建保护功能，可以防止 [惊群效应（thundering herd）](https://en.wikipedia.org/wiki/Cache_stampede) ，即 dogpile 效应。
 * 通过 `least loaded` 和 `round robin` 技术实现请求在副本和节点间的均衡负载。
 * 支持检查节点健康情况，防止向不健康的节点发送请求。
 * 通过 [Let’s Encrypt](https://letsencrypt.org/) 支持 HTTPS 自动签发和更新。
@@ -53,7 +53,7 @@ clusters:
 
 ### 使用预编译的二进制文件
 
-可以从[此处](https://github.com/Vertamedia/chproxy/releases)下载预编译的 `chproxy` 二进制文件。
+可以从 [此处](https://github.com/Vertamedia/chproxy/releases) 下载预编译的 `chproxy` 二进制文件。
 
 只需要下载最新的稳定版二进制文件，解压使用所需要的[配置](#configuration)运行。
 
@@ -69,7 +69,7 @@ Chproxy 是基于 [Go](https://golang.org/) 开发的，最简单的方式是如
 go get -u github.com/Vertamedia/chproxy
 ```
 
-如果你的系统没有安装 Go，可以参考这个[操作指南](https://golang.org/doc/install)。
+如果你的系统没有安装 Go，可以参考这个[操作指南](https://golang.org/doc/install) 。
 
 
 ## 为什么开发了Chproxy
@@ -88,11 +88,11 @@ go get -u github.com/Vertamedia/chproxy
 
  通常 `INSERT` 操作是由有限的几个子网络中的应用服务器发送的，来自其他子网络的 `INSERT` 操作必须被拒绝。
 
-所有的 `INSERT` 操作可能会被路由到一个节点上的[分布式表](https://clickhouse.tech/docs/en/engines/table-engines/special/distributed/)，但与其他节点对比，会增加该节点上的资源使用（CPU 和网络资源），因为该节点必须解析每一条被插入的记录，并路由到对应的节点分片。
+所有的 `INSERT` 操作可能会被路由到一个节点上的 [分布式表](https://clickhouse.tech/docs/en/engines/table-engines/special/distributed/) ，但与其他节点对比，会增加该节点上的资源使用（CPU 和网络资源），因为该节点必须解析每一条被插入的记录，并路由到对应的节点分片。
 
 所以最好是将 `INSERT` 分散到可用的分片节点上，并将其路由到每个分片表，而不是直接向分布式表进行请求。路由逻辑可以直接嵌入到应用程序生成分散后的 `INSERT` ，或者通过代理请求的方式。代理请求的方式会更好一些，因为它允许在不修改应用程序配置，对 `ClickHouse` 集群进行重新配置，避免应用程序的停机时间。多个相同的代理服务可以在不同的服务器上运行，以达到可拓展、高可用的目的。
 
-以下是[INSERT分散示例](https://github.com/Vertamedia/chproxy/blob/master/config/examples/spread.inserts.yml)的最小 `chproxy` 配置：
+以下是 [INSERT分散示例](https://github.com/Vertamedia/chproxy/blob/master/config/examples/spread.inserts.yml) 的最小 `chproxy` 配置：
 
 ```yml
 server:
@@ -124,11 +124,11 @@ clusters:
 
 报表应用通常会从 `SELECT` 查询结果中产生各种用户报表。这些 `SELECT` 产生的负载在 `ClickHouse` 集群上可能会有所不同，这取决于在线用户数量和生成的报表类型。很明显，为了防止集群过载，必须限制负载。
 
-所有的 `SELECT` 可能会被路由到单个节点上的[分布式表](https://clickhouse.tech/docs/en/engines/table-engines/special/distributed/)，该节点会有比其他节点更高的资源使用量（RAM、CPU、网络），因为它必须对从集群其他分片节点获取到数据进行聚合、排序、过滤。
+所有的 `SELECT` 可能会被路由到单个节点上的 [分布式表](https://clickhouse.tech/docs/en/engines/table-engines/special/distributed/) ，该节点会有比其他节点更高的资源使用量（RAM、CPU、网络），因为它必须对从集群其他分片节点获取到数据进行聚合、排序、过滤。
 
 最好是在每个分片节点上创建相同的分布式表，并将 `SELECT` 分散到所有可用的分片节点上。
 
-以下是[SELECT分散示例](https://github.com/Vertamedia/chproxy/blob/master/config/examples/spread.selects.yml)的最小 `chproxy` 配置：
+以下是 [SELECT分散示例](https://github.com/Vertamedia/chproxy/blob/master/config/examples/spread.selects.yml) 的最小 `chproxy` 配置：
 
 ```yml
 server:
@@ -160,7 +160,7 @@ clusters:
 
 假如你需要设置用户名称/密码用于在任何地方访问 `ClickHouse` 集群，可能用于在 [ClickHouse-grafana](https://github.com/Vertamedia/ClickHouse-grafana) 或 [tabix](https://tabix.io/) 创建图形界面管理。通过不信任的网络传输为加密的密码和数据，是一个坏主意。因此在这种情况下，必须通过 HTTPS 访问集群。
 
-以下的 `chproxy` 配置示例演示了 [HTTPS 配置](https://github.com/Vertamedia/chproxy/blob/master/config/examples/https.yml)：
+以下的 `chproxy` 配置示例演示了 [HTTPS 配置](https://github.com/Vertamedia/chproxy/blob/master/config/examples/https.yml) ：
 
 ```yml
 server:
@@ -315,7 +315,7 @@ caches:
 
 `Chproxy` 会自动杀死超过 `max_execution_time` 限制的查询。默认情况下，`chproxy` 会尝试杀死  `default` 用户下的这些超时查询，可以通过 [kill_query_user](https://github.com/Vertamedia/chproxy/blob/master/config#kill_query_user_config) 来覆盖该用户设置。
 
-如果没有指定逻辑集群的[用户配置](https://github.com/Vertamedia/chproxy/blob/master/config#cluster_user_config)部分，会默认使用 `default` 用户。
+如果没有指定逻辑集群的 [用户配置](https://github.com/Vertamedia/chproxy/blob/master/config#cluster_user_config) 部分，会默认使用 `default` 用户。
 
 ### 缓存配置
 
@@ -331,7 +331,7 @@ caches:
 可以在查询字符串中传递可选的缓存命名空间，如  `cache_namespace=aaaa` 。这允许缓存在不同命名空间下对相同的查询做出不同的响应。此外，可以在缓存空间上建立即时缓存刷新 —— 只需按照顺序切换到新的命名空间，即可刷新缓存。
 
 ### 安全配置
-`Chproxy` 可以在将请求代理到 ClickHouse 集群前，自定义从输入请求中删除查询参数（除了这里列出的[用户参数](https://github.com/Vertamedia/chproxy/blob/master/config#param_groups_config) 和[这些参数](https://github.com/Vertamedia/chproxy/blob/master/scope.go#L292)）。这可以防止请求不安全地覆盖各种 ClickHouse [设置](https://clickhouse.tech/docs/en/interfaces/http/#cli-queries-with-parameters)。
+`Chproxy` 可以在将请求代理到 ClickHouse 集群前，自定义从输入请求中删除查询参数（除了这里列出的 [用户参数](https://github.com/Vertamedia/chproxy/blob/master/config#param_groups_config) 和 [这些参数](https://github.com/Vertamedia/chproxy/blob/master/scope.go#L292) ）。这可以防止请求不安全地覆盖各种 ClickHouse [设置](https://clickhouse.tech/docs/en/interfaces/http/#cli-queries-with-parameters) 。
 
 在设置限制时候需要小心，比如允许网络、密码等。
 
@@ -630,7 +630,7 @@ clusters:
         allowed_networks: ["office"]
 ```
 
-#### 完整的配置规范请参考[这里](https://github.com/Vertamedia/chproxy/blob/master/config)
+#### 完整的配置规范请参考 [这里](https://github.com/Vertamedia/chproxy/blob/master/config) 
 
 ## 指标
 所有的指标都以 prometheus 文本格式暴露在 `/metrics` 路径上。
@@ -663,7 +663,7 @@ clusters:
 | timeout_request_total | Counter | The number of timed out requests | `user`, `cluster`, `cluster_user`, `replica`, `cluster_node` |
 | user_queue_overflow_total | Counter | The number of overflows for per-user request queues | `user`, `cluster`, `cluster_user` |
 
-[这里](https://github.com/Vertamedia/chproxy/blob/master/chproxy_overview.json)与一个 [Grafana](https://grafana.com) 的 chproxy 指标仪表盘例子。
+[这里](https://github.com/Vertamedia/chproxy/blob/master/chproxy_overview.json) 与一个 [Grafana](https://grafana.com) 的 chproxy 指标仪表盘例子。
 
 ![dashboard example](https://user-images.githubusercontent.com/2902918/31392734-b2fd4a18-ade2-11e7-84a9-4aaaac4c10d7.png)
 

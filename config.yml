@@ -1,13 +1,22 @@
+
 # echo "select count(1) as pv from dnsmon.cdns_log;" | curl -u admin: --data-binary @- 192.168.101.132:9090
+# echo 'select * from system.clusters' | curl 'http://192.168.124.3:9090/?user=chproxy&password=123456' --data-binary @-
 
 log_debug: true
 
 server:
   http:
+#    listen_addr: "192.168.124.3:9090"
     listen_addr: ":9090"
     allowed_networks: ["1.2.3.4/24"]
 
 users:
+#  - name: "chproxy"
+#    password: "123456"
+#    # 访问哪个集群
+#    to_cluster: "default"
+#    # 以哪个用户账号访问
+#    to_user: "admin"
   - name: "admin"
     #    password: "admin"
     to_cluster: "cluster_1st"
@@ -51,3 +60,5 @@ clusters:
         password: "12rB7WD4"
       - name: "ch"
         password: "XReCeWXz"
+
+

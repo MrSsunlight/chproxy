@@ -20,10 +20,12 @@ import (
 	"golang.org/x/crypto/acme/autocert"
 )
 
-var (
+// go 执行顺序： 导入包 const -> var -> init() -> main包 const -> var -> init() -> main()
+// 尽量避免使用全局变量加载参数，推荐在init() 中进行
+/*var (
 	configFile = flag.String("config", "", "Proxy configuration filename")
 	version    = flag.Bool("version", false, "Prints current version and exits")
-)
+)*/
 
 var (
 	proxy = newReverseProxy()
@@ -32,42 +34,56 @@ var (
 	allowedNetworksHTTP    atomic.Value
 	allowedNetworksHTTPS   atomic.Value
 	allowedNetworksMetrics atomic.Value
+
+	configFile string
+	version    bool
 )
 
+func init() {
+	flag.StringVar(&configFile, "config", "", "Proxy configuration filename")
+	flag.BoolVar(&version, "version", false, "Prints current version and exits")
+}
+
 func main() {
+	// 加载参数 config、version
 	flag.Parse()
-	if *version {
-		fmt.Printf("%s\n", versionString())
+	if version {
+		fmt.Printf("version: %s\n", versionString())
 		os.Exit(0)
 	}
 
-	log.Infof("%s", versionString())
-	log.Infof("Loading config: %s", *configFile)
+	// 加载配置
+	//log.Infof("%s", versionString())
+	log.Infof("Loading config: %s", configFile)
+	// 没有传配置文件  直接退出（log.Fatalf）
 	cfg, err := loadConfig()
 	if err != nil {
 		log.Fatalf("error while loading config: %s", err)
 	}
+	//
 	if err = applyConfig(cfg); err != nil {
 		log.Fatalf("error while applying config: %s", err)
 	}
-	log.Infof("Loading config %q: successful", *configFile)
+	log.Infof("Loading config %q: successful", configFile)
 
+	// 手动触发配置从加载
 	c := make(chan os.Signal)
 	signal.Notify(c, syscall.SIGHUP)
 	go func() {
 		for {
 			switch <-c {
 			case syscall.SIGHUP:
-				log.Infof("SIGHUP received. Going to reload config %s ...", *configFile)
+				log.Infof("SIGHUP received. Going to reload config %s ...", configFile)
 				if err := reloadConfig(); err != nil {
 					log.Errorf("error while reloading config: %s", err)
 					continue
 				}
-				log.Infof("Reloading config %s: successful", *configFile)
+				log.Infof("Reloading config %s: successful", configFile)
 			}
 		}
 	}()
 
+	// ch 服务器地址
 	server := cfg.Server
 	if len(server.HTTP.ListenAddr) == 0 && len(server.HTTPS.ListenAddr) == 0 {
 		panic("BUG: broken config validation - `listen_addr` is not configured")
@@ -83,6 +99,7 @@ func main() {
 		go serve(server.HTTP)
 	}
 
+	// 阻塞进程 不退出
 	select {}
 }
 
@@ -197,6 +214,7 @@ func listenAndServe(ln net.Listener, h http.Handler, cfg config.TimeoutCfg) erro
 var promHandler = promhttp.Handler()
 
 func serveHTTP(rw http.ResponseWriter, r *http.Request) {
+	log.Debugf("request method: %s", r.Method)
 	switch r.Method {
 	case http.MethodGet, http.MethodPost:
 		// Only GET and POST methods are supported.
@@ -210,6 +228,8 @@ func serveHTTP(rw http.ResponseWriter, r *http.Request) {
 		respondWith(rw, err, http.StatusMethodNotAllowed)
 		return
 	}
+
+	log.Debugf("request URL path: %s", r.URL.Path)
 
 	switch r.URL.Path {
 	case "/favicon.ico":
@@ -251,20 +271,28 @@ func serveHTTP(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// 加载yml配置文件
 func loadConfig() (*config.Config, error) {
-	if *configFile == "" {
+	// 未传参直接结束
+	if configFile == "" {
 		log.Fatalf("Missing -config flag")
 	}
-	cfg, err := config.LoadFile(*configFile)
+	// 加载配置文件
+	cfg, err := config.LoadFile(configFile)
 	if err != nil {
 		configSuccess.Set(0)
-		return nil, fmt.Errorf("can't load config %q: %s", *configFile, err)
+		return nil, fmt.Errorf("can't load config %q: %s", configFile, err)
 	}
+	// Prometheus 监控指标计数
 	configSuccess.Set(1)
 	configSuccessTime.Set(float64(time.Now().Unix()))
 	return cfg, nil
 }
 
+/*
+	将配置应用与proxy
+	初始化网络、日志级别、集群以及集群访问
+*/
 func applyConfig(cfg *config.Config) error {
 	if err := proxy.applyConfig(cfg); err != nil {
 		return err
