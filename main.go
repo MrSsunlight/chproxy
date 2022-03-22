@@ -250,13 +250,10 @@ func serveHTTP(rw http.ResponseWriter, r *http.Request) {
 			an = allowedNetworksHTTPS.Load().(*config.Networks)
 			err = fmt.Errorf("https connections are not allowed from %s", r.RemoteAddr)
 		} else {
-			log.Debugf("aaaa: %v", allowedNetworksHTTP)
-			log.Debugf("bbb: %v", allowedNetworksHTTP.Load())
-			log.Debugf("ccc: %v", allowedNetworksHTTP.Load().(*config.Networks))
-
 			an = allowedNetworksHTTP.Load().(*config.Networks)
 			err = fmt.Errorf("http connections are not allowed from %s", r.RemoteAddr)
 		}
+		// 检查传递的地址是否在网络范围内
 		if !an.Contains(r.RemoteAddr) {
 			rw.Header().Set("Connection", "close")
 			respondWith(rw, err, http.StatusForbidden)

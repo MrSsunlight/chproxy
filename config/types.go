@@ -98,6 +98,7 @@ func (n *Networks) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 // Contains checks whether passed addr is in the range of networks
+// 检查传递的地址是否在网络范围内
 func (n Networks) Contains(addr string) bool {
 	if len(n) == 0 {
 		return true

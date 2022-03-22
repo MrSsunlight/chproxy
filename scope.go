@@ -323,6 +323,7 @@ var allowedParams = []string{
 // @see https://clickhouse.yandex/docs/en/table_engines/external_data/
 var externalDataParams = regexp.MustCompile(`(_types|_structure|_format)$`)
 
+// 装饰的要求
 func (s *scope) decorateRequest(req *http.Request) (*http.Request, url.Values) {
 	// Make new params to purify URL.
 	params := make(url.Values)
@@ -690,6 +691,7 @@ const (
 )
 
 // decrease host priority for next requests
+// 降低下一个请求的主机优先级
 func (h *host) penalize() {
 	p := atomic.LoadUint32(&h.penalty)
 	if p >= penaltyMaxSize {

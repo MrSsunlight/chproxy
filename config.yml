@@ -8,7 +8,7 @@ server:
   http:
 #    listen_addr: "192.168.124.3:9090"
     listen_addr: ":9090"
-    allowed_networks: ["1.2.3.4/24"]
+    allowed_networks: ["127.0.0.0/24"]
 
 users:
 #  - name: "chproxy"
@@ -40,7 +40,7 @@ users:
 clusters:
   - name: "cluster_1st"
     nodes: [
-        "10.202.254.234:8123",
+        "127.0.0.1:8123",
     ]
 
     heartbeat:

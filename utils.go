@@ -63,7 +63,7 @@ func getSessionTimeout(req *http.Request) int {
 }
 
 // getQuerySnippet returns query snippet.
-//
+// 返回查询片段
 // getQuerySnippet must be called only for error reporting.
 func getQuerySnippet(req *http.Request) string {
 	query := req.URL.Query().Get("query")
