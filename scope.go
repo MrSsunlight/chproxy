@@ -33,6 +33,7 @@ func newScopeID() scopeID {
 
 var nextScopeID = uint64(time.Now().UnixNano())
 
+// 请求作用范围
 type scope struct {
 	startTime   time.Time
 	id          scopeID
@@ -53,6 +54,7 @@ type scope struct {
 	labels prometheus.Labels
 }
 
+// 获取请求信息
 func newScope(req *http.Request, u *user, c *cluster, cu *clusterUser, sessionId string, sessionTimeout int) *scope {
 	h := c.getHost()
 	if sessionId != "" {
@@ -62,6 +64,7 @@ func newScope(req *http.Request, u *user, c *cluster, cu *clusterUser, sessionId
 	if addr, ok := req.Context().Value(http.LocalAddrContextKey).(net.Addr); ok {
 		localAddr = addr.String()
 	}
+	// 绑定请求信息
 	s := &scope{
 		startTime:      time.Now(),
 		id:             newScopeID(),
@@ -95,6 +98,7 @@ func (s *scope) String() string {
 		s.remoteAddr, s.localAddr, time.Since(s.startTime).Nanoseconds()/1000.0)
 }
 
+// 请求递增
 func (s *scope) incQueued() error {
 	if s.user.queueCh == nil && s.clusterUser.queueCh == nil {
 		// Request queues in the current scope are disabled.
@@ -109,6 +113,7 @@ func (s *scope) incQueued() error {
 		"cluster_user": s.labels["cluster_user"],
 	}
 
+	// 监控指标 inc 递增，或者超限 dec 递减回退
 	if s.user.queueCh != nil {
 		select {
 		case s.user.queueCh <- struct{}{}:
@@ -126,6 +131,7 @@ func (s *scope) incQueued() error {
 		}
 	}
 
+	//
 	if s.clusterUser.queueCh != nil {
 		select {
 		case s.clusterUser.queueCh <- struct{}{}:
@@ -182,6 +188,7 @@ func (s *scope) incQueued() error {
 
 		// Choose new host, since the previous one may become obsolete
 		// after sleeping.
+		// 选择新的主机，因为之前的主机在睡觉后可能会过时
 		h := s.cluster.getHost()
 		s.host = h
 		s.labels["replica"] = h.replica.name
@@ -781,7 +788,7 @@ func newClusters(cfg []config.Cluster) (map[string]*cluster, error) {
 }
 
 // getReplica returns least loaded + round-robin replica from the cluster.
-//
+// 返回集群中负载最少的节点
 // Always returns non-nil.
 func (c *cluster) getReplica() *replica {
 	idx := atomic.AddUint32(&c.nextReplicaIdx, 1)
@@ -795,6 +802,7 @@ func (c *cluster) getReplica() *replica {
 	reqs := r.load()
 
 	// Set least priority to inactive replica.
+	// 设置最低优先级为非活动副本
 	if !r.isActive() {
 		reqs = ^uint32(0)
 	}
@@ -804,6 +812,7 @@ func (c *cluster) getReplica() *replica {
 	}
 
 	// Scan all the replicas for the least loaded replica.
+	// 扫描所有副本，寻找加载最少的副本
 	for i := uint32(1); i < n; i++ {
 		tmpIdx := (idx + i) % n
 		tmpR := c.replicas[tmpIdx]

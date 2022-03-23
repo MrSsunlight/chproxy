@@ -51,8 +51,10 @@ func newReverseProxy() *reverseProxy {
 
 func (rp *reverseProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	startTime := time.Now()
+	// 获取 账号密码、ACL 权限校验 以及绑定请求信息（包含query_id）
 	s, status, err := rp.getScope(req)
 	if err != nil {
+		// 拼装异常响应数据结构
 		q := getQuerySnippet(req)
 		err = fmt.Errorf("%q: %s; query: %q", req.RemoteAddr, err, q)
 		respondWith(rw, err, status)
@@ -61,6 +63,7 @@ func (rp *reverseProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	// WARNING: don't use s.labels before s.incQueued,
 	// since `replica` and `cluster_node` may change inside incQueued.
+	// 监控指标递增，并选择最优节点 作为主查询节点
 	if err := s.incQueued(); err != nil {
 		limitExcess.With(s.labels).Inc()
 		q := getQuerySnippet(req)
@@ -103,6 +106,7 @@ func (rp *reverseProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		rw.Header().Set("X-ClickHouse-Server-Session-Id", s.sessionId)
 	}
 
+	// 检测是否有缓存、进行正式查询
 	if s.user.cache == nil {
 		rp.proxyRequest(s, srw, srw, req)
 	} else {
@@ -111,6 +115,7 @@ func (rp *reverseProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	// It is safe calling getQuerySnippet here, since the request
 	// has been already read in proxyRequest or serveFromCache.
+	// 获取请求摘要信息
 	q := getQuerySnippet(req)
 	if srw.statusCode == http.StatusOK {
 		requestSuccess.With(s.labels).Inc()
@@ -492,6 +497,7 @@ func (rp *reverseProxy) getScope(req *http.Request) (*scope, int, error) {
 		return nil, http.StatusForbidden, fmt.Errorf("cluster user %q is not allowed to access", cu.name)
 	}
 
+	// 创建请求
 	s := newScope(req, u, c, cu, sessionId, sessionTimeout)
 	return s, 0, nil
 }

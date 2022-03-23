@@ -40,7 +40,7 @@ users:
 clusters:
   - name: "cluster_1st"
     nodes: [
-        "127.0.0.1:8123",
+        "10.174.221.143:8123",
     ]
 
     heartbeat:
